@@ -85,6 +85,7 @@ One mistake made it into the chat but not into the product. Claude reported "39 
 - **Fully traced:** every question has an explanation and a slide source.
 - **No setup:** one file, Python standard library only, runs on Windows, macOS and Linux.
 - **Open source:** published under the MIT license, with a quick-start guide (`git clone` and go) for classmates who have never used a terminal.
+- **A browser version:** a simulated terminal at betzaleltusk.github.io/dcom142-cmdquiz, so classmates can play with nothing installed. It reads the questions exported from `cmdquiz.py` and uses a JavaScript port of the answer checker and drills that was tested against the Python originals on every bank answer, 4,000 random inputs and every drill case.
 
 ## Lessons
 

@@ -1,0 +1,31 @@
+name: Sync web questions
+
+# The browser version (docs/) reads its questions from docs/questions.js, which is
+# generated from cmdquiz.py. This keeps the two in step on every push.
+on:
+  push:
+    branches: [main]
+    paths: ["cmdquiz.py", "docs/export_questions.py"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Export questions from cmdquiz.py
+        run: python docs/export_questions.py
+      - name: Commit if anything changed
+        run: |
+          if git diff --quiet; then echo "questions.js already up to date."; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/questions.js
+          git commit -m "Sync web questions from cmdquiz.py"
+          git push

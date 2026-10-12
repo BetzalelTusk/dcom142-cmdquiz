@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>cmdquiz · Linux command trainer</title>
+<meta name="description" content="A Matrix-themed terminal game for drilling the Linux commands from DCOM 142 (Linux+). Runs in your browser, nothing to install.">
+<meta name="theme-color" content="#050805">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23050805'/%3E%3Ctext x='10' y='44' font-family='monospace' font-size='34' font-weight='700' fill='%2300ff41'%3E%3E_%3C/text%3E%3C/svg%3E">
+<style>
+:root {
+  --bg: #050805; --edge: #1d3a24;
+  --g: #00ff41; --gh: #beffc8; --gr: #00c83c; --dk: #006e1e; --dim: #00551e; --grey: #788c7d; --w: #e1ffe6;
+  --cy: #00e5ff; --mg: #ff3cc8; --yl: #ffd600; --or: #ff8c00; --rd: #ff3250; --pu: #aa78ff; --bl: #6ea0ff;
+  --mono: "Cascadia Mono", "Cascadia Code", Consolas, "SF Mono", Menlo, "DejaVu Sans Mono", "Liberation Mono", monospace;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; background: #020402; color: var(--w); }
+body { display: flex; align-items: center; justify-content: center; }
+#term {
+  position: relative; display: flex; flex-direction: column; width: min(100%, 980px); height: min(100dvh, 780px);
+  background: var(--bg); border: 1px solid var(--edge); border-radius: 12px; overflow: hidden;
+  box-shadow: 0 0 0 1px #000, 0 30px 80px rgba(0, 255, 65, .07);
+}
+.bar { display: flex; align-items: center; gap: 12px; flex: none; height: 34px; padding: 0 14px; border-bottom: 1px solid var(--edge);
+  font: 13px/1 var(--mono); color: var(--grey); }
+.dots { display: flex; gap: 7px; }
+.dots i { width: 11px; height: 11px; border-radius: 50%; background: #ff5f57; }
+.dots i:nth-child(2) { background: #febc2e; } .dots i:nth-child(3) { background: #28c840; }
+.ttl { flex: 1; text-align: center; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.bar a { color: var(--grey); text-decoration: none; } .bar a:hover { color: var(--g); }
+#scr { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 12px 16px 22px; font: 15px/1.42 var(--mono); color: var(--gr);
+  scrollbar-width: thin; scrollbar-color: var(--dim) transparent; }
+.line { white-space: pre-wrap; word-break: break-word; min-height: 1.42em; }
+.g { color: var(--g); } .gh { color: var(--gh); } .gr { color: var(--gr); } .dk { color: var(--dk); } .dim { color: var(--dim); }
+.grey { color: var(--grey); } .w { color: var(--w); } .cy { color: var(--cy); } .mg { color: var(--mg); } .yl { color: var(--yl); }
+.or { color: var(--or); } .rd { color: var(--rd); } .pu { color: var(--pu); } .bl { color: var(--bl); }
+.tl { color: #00d2b4; } .pk { color: #ff78be; } .lime { color: #96ff78; } .sv { color: #c8c8d2; }
+.b { font-weight: 700; }
+.sel { background: #00461a; color: var(--gh); font-weight: 700; }
+.click { cursor: pointer; border-radius: 3px; }
+.click:hover { background: rgba(0, 255, 65, .07); }
+.cur { display: inline-block; width: .62em; height: 1.15em; vertical-align: -.2em; background: var(--g); animation: blink 1.06s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+#rain { position: absolute; left: 0; right: 0; top: 34px; bottom: 0; width: 100%; height: calc(100% - 34px); pointer-events: none; transition: opacity .5s; }
+#kb { position: fixed; left: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; border: 0; padding: 0; font-size: 16px; }
+@media (max-width: 720px) {
+  #term { height: 100dvh; border-radius: 0; border: 0; }
+  #scr { font-size: 13px; padding: 10px 10px 18px; }
+}
+@media (prefers-reduced-motion: reduce) { .cur { animation: none; } }
+</style>
+</head>
+<body>
+<main id="term" aria-label="cmdquiz terminal">
+  <div class="bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="ttl">guest@cmdquiz: ~</span><a href="https://github.com/BetzalelTusk/dcom142-cmdquiz" target="_blank" rel="noopener">source ↗</a></div>
+  <div id="scr" role="log" aria-live="polite"></div>
+  <canvas id="rain" aria-hidden="true"></canvas>
+</main>
+<form id="kbf" action="#" autocomplete="off"><input id="kb" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send" aria-label="Type your answer"></form>
+<noscript><p style="color:#00ff41;font-family:monospace;padding:20px">cmdquiz needs JavaScript. Or run the terminal version: see the README on GitHub.</p></noscript>
+<script src="questions.js"></script>
+<script src="engine.js"></script>
+<script>
+"use strict";
+const D = window.CMDQUIZ_DATA, E = window.CMDQUIZ;
+const $ = s => document.querySelector(s);
+const scr = $("#scr"), kb = $("#kb"), term = $("#term"), canvas = $("#rain");
+const PARAMS = new URLSearchParams(location.search);
+const ANIM = !matchMedia("(prefers-reduced-motion: reduce)").matches && !PARAMS.has("noanim");
+const BANK = D.bank.map(q => Object.assign({ typed: !q.loose }, q));
+const TOPIC_CLS = { basics: "cy", accounts: "bl", shell: "mg", perms: "yl", special: "or", acl: "pu", files: "tl", text: "pk", drill: "g" };
+const GLYPHS = "0123456789ABCDEFXZ$#@%&*+=-<>/\\|{}[]?!:;";
+const SYM = { ok: "✔", bad: "✘", arrow: "▶", prompt: "❯", full: "█", empty: "░", star: "★", bolt: "⚡", dot: "•" };
+
+// ------------------------------------------------------------------ storage (per browser)
+const KEY = "cmdquiz:progress:v1";
+function load() {
+  try { const v = JSON.parse(localStorage.getItem(KEY)); if (v && v.q) return Object.assign(E.newDb(), v); } catch (e) {}
+  return E.newDb();
+}
+function save(db) { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) {} }
+
+// ------------------------------------------------------------------ screen
+function span(text, cls) { const s = document.createElement("span"); if (cls) s.className = cls; s.textContent = text; return s; }
+function add(el, pieces) {
+  for (const p of pieces) {
+    if (p == null || p === "") continue;
+    if (typeof p === "string") el.append(p);
+    else if (p instanceof Node) el.append(p);
+    else el.append(span(p[0], p[1]));
+  }
+  return el;
+}
+function line(...pieces) {
+  const d = add(Object.assign(document.createElement("div"), { className: "line" }), pieces);
+  scr.append(d); scrollEnd(); return d;
+}
+const blank = () => line();
+const clear = () => { scr.textContent = ""; };
+const scrollEnd = () => { scr.scrollTop = scr.scrollHeight; };
+const vlen = pieces => pieces.reduce((n, p) => n + (p == null ? 0 : typeof p === "string" ? p.length : p instanceof Node ? p.textContent.length : p[0].length), 0);
+
+let charW = 0;
+function fullCols() {
+  cols();
+  const cs = getComputedStyle(scr);
+  return Math.floor((scr.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)) / charW) - 1;
+}
+function cols() {
+  if (!charW) { const s = span("MMMMMMMMMM"); s.style.visibility = "hidden"; scr.append(s); charW = s.getBoundingClientRect().width / 10; s.remove(); }
+  const cs = getComputedStyle(scr);
+  const inner = scr.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+  return Math.max(30, Math.min(78, Math.floor(inner / charW) - 1));
+}
+addEventListener("resize", () => { charW = 0; });
+
+function bar(frac, n, on = "g", off = "dim") {
+  const k = Math.max(0, Math.min(n, Math.round(frac * n)));
+  return [[SYM.full.repeat(k), on], [SYM.empty.repeat(n - k), off]];
+}
+function box(title, right, rows) {
+  const W = cols();
+  const t = `─ ${title} `, r = right ? ` ${right} ─` : "─";
+  const fill = Math.max(1, W - 2 - t.length - r.length);
+  const rightSpan = span(r, "grey");
+  line(["╭", "dk"], [t, "g b"], ["─".repeat(fill), "dk"], rightSpan, ["╮", "dk"]);
+  for (const row of rows) line(["│", "dk"], " ", ...row, " ".repeat(Math.max(0, W - 4 - vlen(row))), " ", ["│", "dk"]);
+  line(["╰" + "─".repeat(W - 2) + "╯", "dk"]);
+  return rightSpan;
+}
+function streakPieces(s) {
+  if (s >= 10) return [[`${SYM.bolt}x${s} UNSTOPPABLE`, "mg b"]];
+  if (s >= 5) return [[`${SYM.bolt}x${s} ON FIRE`, "or b"]];
+  if (s >= 2) return [[`x${s} streak`, "yl b"]];
+  return [["no streak", "grey"]];
+}
+function rankPieces(db) {
+  const xp = db.xp || 0, [[lo, name], nxt] = E.rankFor(D.ranks, xp);
+  const tail = nxt ? [...bar((xp - lo) / (nxt[0] - lo), 16, "cy", "dim"), " ", [`${xp}/${nxt[0]} XP`, "grey"]] : [[`${xp} XP  MAX RANK`, "mg b"]];
+  return [["RANK", "grey"], " ", [name.toUpperCase(), "cy b"], "  ", ...tail];
+}
+
+// ------------------------------------------------------------------ input primitives
+let handler = null;                         // the active keydown handler
+document.addEventListener("keydown", e => { if (handler) handler(e); });
+// Some phone keyboards never send a keydown for Enter; submitting the form is the fallback.
+$("#kbf").addEventListener("submit", e => { e.preventDefault(); if (handler) handler({ key: "Enter", type: "keydown", preventDefault() {} }); });
+const focusKb = () => kb.focus({ preventScroll: true });
+
+/** Resolve on any key or tap, or after ms. Used to skip animations. */
+function interruptible(ms) {
+  return new Promise(res => {
+    let done = false;
+    const fin = () => { if (done) return; done = true; clearTimeout(t); removeEventListener("keydown", fin, true); term.removeEventListener("pointerdown", fin); res(); };
+    const t = setTimeout(fin, ms);
+    addEventListener("keydown", fin, true); term.addEventListener("pointerdown", fin);
+  });
+}
+const pause = ms => (ANIM ? interruptible(ms) : Promise.resolve());
+
+function waitKey(msg = "press any key") {
+  return new Promise(res => {
+    const d = line([`  ${SYM.arrow} ${msg}`, "dk"]); d.classList.add("click");
+    const fin = e => { if (e && e.type === "keydown" && ["Shift", "Control", "Alt", "Meta"].includes(e.key)) return;
+      if (e && e.type === "keydown") e.preventDefault();
+      handler = null; term.removeEventListener("pointerup", fin); d.remove(); res(); };
+    setTimeout(() => { handler = fin; term.addEventListener("pointerup", fin); }, 120);
+  });
+}
+
+/** A prompt line with a green block cursor. Resolves with what was typed when Enter is pressed. */
+function ask(promptText) {
+  return new Promise(res => {
+    const d = line([promptText, "g b"]); d.classList.add("click");
+    const typed = span("", "g b"), cur = span(" ", "cur");
+    d.append(typed, cur);
+    kb.value = ""; focusKb();
+    const upd = () => { typed.textContent = kb.value; scrollEnd(); };
+    kb.oninput = upd;
+    const onTap = () => focusKb();
+    term.addEventListener("pointerup", onTap);
+    handler = e => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const v = kb.value; kb.value = ""; kb.oninput = null; handler = null;
+        term.removeEventListener("pointerup", onTap); cur.remove(); d.classList.remove("click");
+        res({ value: v, line: d });
+      } else if (document.activeElement !== kb && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        if (e.key.length === 1) { kb.value += e.key; upd(); e.preventDefault(); }
+        else if (e.key === "Backspace") { kb.value = kb.value.slice(0, -1); upd(); e.preventDefault(); }
+        focusKb();
+      }
+    };
+  });
+}
+
+/** Arrow-key menu; rows are also tappable. options: [key, label, note]. Resolves with the key. */
+function menu(options, hint = "↑↓ move  •  enter or number picks  •  or tap an option") {
+  return new Promise(res => {
+    let sel = 0;
+    const rows = options.map((o, i) => { const d = line(); d.classList.add("click"); d.onclick = () => finish(i); return d; });
+    line(); line([`  ── ${hint}`, "dk"]);
+    const narrow = cols() < 50;
+    const draw = () => rows.forEach((d, i) => {
+      const [k, l, n] = options[i]; d.textContent = "";
+      const lab = narrow ? l : l.padEnd(20);
+      if (i === sel) add(d, [[` ${SYM.arrow} ${k}  ${lab}`, "sel"], narrow ? "" : ["  " + n, "g"]]);
+      else add(d, [[`   ${k}`, "dk"], [`  ${lab}`, "gr"], narrow ? "" : ["  " + n, "grey"]]);
+    });
+    const finish = i => { handler = null; rows.forEach(d => { d.onclick = null; d.classList.remove("click"); }); res(options[i][0]); };
+    handler = e => {
+      const k = e.key, n = options.length;
+      if (k === "ArrowUp" || k === "k") { sel = (sel + n - 1) % n; draw(); e.preventDefault(); }
+      else if (k === "ArrowDown" || k === "j") { sel = (sel + 1) % n; draw(); e.preventDefault(); }
+      else if (k === "Enter") { e.preventDefault(); finish(sel); }
+      else if (k === "Escape") { const b = options.findIndex(o => o[0] === "q"); if (b >= 0) finish(b); }
+      else { const i = options.findIndex(o => o[0] === k.toLowerCase()); if (i >= 0) { e.preventDefault(); sel = i; draw(); finish(i); } }
+    };
+    kb.blur(); draw();
+  });
+}
+
+/** Multi-select list: space or tap toggles, a = all midterm topics, enter starts. Resolves with keys ([] = back). */
+function checklist(options) {
+  return new Promise(res => {
+    let sel = 0; const on = new Set();
+    const rows = options.map((o, i) => { const d = line(); d.classList.add("click"); d.onclick = () => { sel = i; toggle(i); }; return d; });
+    line();
+    const start = line([`   [ start ]`, "g b"]); start.classList.add("click");
+    const back = line([`   [ back to menu ]`, "grey"]); back.classList.add("click");
+    line([`  ── ↑↓ move  •  space or tap toggles  •  a = all midterm topics  •  enter starts`, "dk"]);
+    const narrow = cols() < 60;
+    const draw = () => rows.forEach((d, i) => {
+      const [k, , note] = options[i], mark = `[${on.has(k) ? SYM.ok : " "}]`; d.textContent = "";
+      const tail = narrow ? "" : " " + note;
+      if (i === sel) add(d, [[` ${SYM.arrow} ${mark} ${k.padEnd(9)}${tail} `, "sel"]]);
+      else add(d, ["   ", [mark, on.has(k) ? "g" : "dk"], " ", [k.padEnd(9), (TOPIC_CLS[k] || "gr") + (on.has(k) ? " b" : "")], narrow ? "" : [tail, "grey"]]);
+    });
+    const toggle = i => { const k = options[i][0]; on.has(k) ? on.delete(k) : on.add(k); draw(); };
+    const done = keys => { handler = null; [...rows, start, back].forEach(d => { d.onclick = null; d.classList.remove("click"); }); res(keys); };
+    start.onclick = () => done(options.map(o => o[0]).filter(k => on.has(k)).length ? options.map(o => o[0]).filter(k => on.has(k)) : [options[sel][0]]);
+    back.onclick = () => done([]);
+    handler = e => {
+      const k = e.key, n = options.length;
+      if (k === "ArrowUp" || k === "k") { sel = (sel + n - 1) % n; draw(); e.preventDefault(); }
+      else if (k === "ArrowDown" || k === "j") { sel = (sel + 1) % n; draw(); e.preventDefault(); }
+      else if (k === " ") { e.preventDefault(); toggle(sel); }
+      else if (k === "a") { const all = D.midterm.every(t => on.has(t)) && on.size === D.midterm.length; on.clear(); if (!all) D.midterm.forEach(t => on.add(t)); draw(); }
+      else if (k === "Enter") { e.preventDefault(); start.onclick(); }
+      else if (k === "Escape" || k === "q") done([]);
+    };
+    kb.blur(); draw();
+  });
+}
+
+// ------------------------------------------------------------------ effects
+async function typeLine(pieces) {
+  if (!ANIM) return line(...pieces);
+  const d = line();
+  const parts = pieces.filter(p => p != null && p !== "").map(p => (typeof p === "string" ? [p, ""] : p));
+  let skip = false;
+  const s = () => { skip = true; };
+  addEventListener("keydown", s, true); term.addEventListener("pointerdown", s);
+  for (const [text, cls] of parts) {
+    const sp = span("", cls); d.append(sp);
+    for (let i = 0; i < text.length; i += 2) {
+      if (skip) { sp.textContent = text; break; }
+      sp.textContent = text.slice(0, i + 2);
+      await new Promise(r => setTimeout(r, 9));
+    }
+  }
+  removeEventListener("keydown", s, true); term.removeEventListener("pointerdown", s);
+  scrollEnd(); return d;
+}
+async function glitch(text, cls) {
+  const d = line();
+  if (ANIM) for (let f = 0; f < 4; f++) {
+    d.textContent = ""; d.append(span([...text].map(c => (c === " " ? " " : GLYPHS[Math.floor(Math.random() * GLYPHS.length)])).join(""), cls));
+    await new Promise(r => setTimeout(r, 40));
+  }
+  d.textContent = ""; d.append(span(text, cls + " b"));
+}
+
+const LOGO = {
+  C: [" ████ ", "██    ", "██    ", "██    ", " ████ "], M: ["██   ██", "███ ███", "██ █ ██", "██   ██", "██   ██"],
+  D: ["█████ ", "██  ██", "██  ██", "██  ██", "█████ "], Q: [" ████ ", "██  ██", "██  ██", "██ ██ ", " ██ ██"],
+  U: ["██  ██", "██  ██", "██  ██", "██  ██", " ████ "], I: ["██", "██", "██", "██", "██"],
+  Z: ["██████", "   ██ ", "  ██  ", " ██   ", "██████"],
+};
+const logoRows = () => [0, 1, 2, 3, 4].map(r => [..."CMDQUIZ"].map(c => LOGO[c][r]).join("  "));
+function gradientLine(text, pad) {
+  const d = line(pad); const n = Math.max(1, text.length - 1);
+  [...text].forEach((ch, i) => {
+    const t = i / n, s = span(ch, "b");
+    s.style.color = `rgb(0,${Math.round(255 - 85 * t)},${Math.round(65 + 120 * t)})`; d.append(s);
+  });
+  return d;
+}
+
+async function intro() {
+  if (!ANIM || PARAMS.has("nointro") || document.hidden) return;
+  const ctx = canvas.getContext("2d"), dpr = devicePixelRatio || 1;
+  const W = canvas.clientWidth, H = canvas.clientHeight;
+  canvas.width = W * dpr; canvas.height = H * dpr; ctx.scale(dpr, dpr);
+  const fs = 15, colsN = Math.ceil(W / 18), drops = Array.from({ length: colsN }, () => -Math.random() * H / fs);
+  ctx.font = `${fs}px ${getComputedStyle(scr).fontFamily}`;
+  let skip = false; const s = () => { skip = true; };
+  addEventListener("keydown", s, true); term.addEventListener("pointerdown", s);
+  const t0 = performance.now();
+  await new Promise(res => {
+    let over = false;
+    const end = () => { if (!over) { over = true; res(); } };
+    setTimeout(end, 1800);                  // animation frames pause in hidden tabs; never wait on them
+    const frame = now => {
+      if (over) return;
+      ctx.fillStyle = "rgba(5,8,5,0.2)"; ctx.fillRect(0, 0, W, H);
+      for (let i = 0; i < colsN; i++) {
+        const y = drops[i] * fs;
+        ctx.fillStyle = "#beffc8"; ctx.fillText(GLYPHS[Math.floor(Math.random() * GLYPHS.length)], i * 18, y);
+        ctx.fillStyle = "#00ff41"; ctx.fillText(GLYPHS[Math.floor(Math.random() * GLYPHS.length)], i * 18, y - fs);
+        drops[i] += 0.55 + (i % 3) * 0.12;
+        if (y > H + 60 && Math.random() > 0.96) drops[i] = 0;
+      }
+      if (skip || now - t0 > 1700) return end();
+      requestAnimationFrame(frame);
+    };
+    requestAnimationFrame(frame);
+  });
+  // decode the title out of the rain
+  const rows = logoRows(), wide = cols() >= rows[0].length + 2;
+  if (wide && !skip) {
+    clear(); for (let k = 0; k < 4; k++) blank();
+    const pad = " ".repeat(Math.max(0, Math.floor((fullCols() - rows[0].length) / 2)));
+    const lines = rows.map(() => line());
+    for (let f = 0; f <= 12 && !skip; f++) {
+      lines.forEach((d, r) => {
+        d.textContent = pad;
+        [...rows[r]].forEach((ch, c) => {
+          if (ch === " ") d.append(" ");
+          else if (Math.random() < f / 12) { const sp = span(ch, "b"); const t = c / (rows[r].length - 1); sp.style.color = `rgb(0,${Math.round(255 - 90 * t)},${Math.round(65 + 120 * t)})`; d.append(sp); }
+          else d.append(span(GLYPHS[Math.floor(Math.random() * GLYPHS.length)], "dk"));
+        });
+      });
+      await new Promise(r => setTimeout(r, 45));
+    }
+    line(pad, ["  DCOM 142 // LINUX COMMAND TRAINER", "w b"]);
+  }
+  canvas.style.opacity = "0";
+  if (!skip) await interruptible(700);
+  removeEventListener("keydown", s, true); term.removeEventListener("pointerdown", s);
+}
+
+// ------------------------------------------------------------------ game
+const isMid = q => D.midterm.includes(q.topic);
+
+async function play(db, source, title, timeLimit) {
+  let nxt, total = null;
+  if (typeof source === "function") nxt = source;
+  else {
+    if (!source.length) { line(["Nothing to ask here yet.", "yl"]); await waitKey(); return; }
+    let k = 0; nxt = () => source[k++] || null; total = source.length;
+  }
+  let score = 0, streak = 0, best = 0, right = 0, asked = 0;
+  const t0 = performance.now(), secs = () => (performance.now() - t0) / 1000;
+  for (;;) {
+    if (timeLimit && secs() >= timeLimit) return finish(db, title, score, right, asked, best, t0, "TIME UP");
+    const q = nxt(); if (!q) break;
+    clear(); window.__current = q;
+    const i = asked + 1, W = cols();
+    const label = () => timeLimit ? `Q${i}  ${SYM.bolt} ${String(Math.max(0, Math.ceil(timeLimit - secs()))).padStart(2)}s left` : `Q ${i}/${total}`;
+    const frac = timeLimit ? Math.max(0, 1 - secs() / timeLimit) : asked / total;
+    const barN = Math.max(8, Math.min(22, W - 40));
+    const stats = [["score", "grey"], " ", [String(score), "w b"], "   ", ...streakPieces(streak)];
+    const rows = W >= 60 ? [[...bar(frac, barN, timeLimit ? "cy" : "g"), "   ", ...stats]] : [bar(frac, barN, timeLimit ? "cy" : "g"), stats];
+    const rightSpan = box(title.toUpperCase(), label(), rows);
+    const timer = timeLimit ? setInterval(() => { rightSpan.textContent = ` ${label()} ─`; }, 250) : null;
+    blank();
+    await typeLine(["  ", [`[${q.topic.toUpperCase()}]`, (TOPIC_CLS[q.topic] || "g") + " b"], " ", [q.prompt, "w b"]]);
+    blank();
+    let hinted = false, tries = 0, ok = false, given = null;
+    for (;;) {
+      const { value, line: ln } = await ask(`  ${SYM.prompt} `);
+      const a = value.trim();
+      if (["q", "quit", "exit"].includes(a.toLowerCase())) { clearInterval(timer); return finish(db, title, score, right, asked, best, t0, "ENDED EARLY"); }
+      if (a === "?") {
+        hinted = true;
+        if (q.loose) {
+          const n = q.answers[0].length;
+          line([n <= 2 ? `    hint: the answer is ${n} character${n !== 1 ? "s" : ""} long` : `    hint: starts with '${q.answers[0][0]}' (${n} characters)`, "yl"]);
+        } else if (q.typed) {
+          const toks = E.rawTokens(q.answers[0]); const first = toks[0] || q.answers[0];
+          line([`    hint: starts with '${first}' (${toks.length} word${toks.length !== 1 ? "s" : ""})`, "yl"]);
+        } else line(["    hint: r=4 w=2 x=1; special digit in front: 4=SUID 2=SGID; new files start at 666 minus the umask", "yl"]);
+        continue;
+      }
+      if (a === "" && tries === 0) { ln.remove(); continue; }          // re-prompt in place
+      if (["skip", "s", "idk", ""].includes(a.toLowerCase())) break;   // Enter after a miss = second attempt
+      given = a;
+      ok = E.checkAnswer(q, a);
+      if (ok) break;
+      tries++;
+      if (tries >= 2) break;
+      line([`    ${SYM.bad} not quite`, "rd b"], [" - one more try  (Enter = show answer, ? = hint)", "grey"]);
+    }
+    clearInterval(timer);
+    asked = i; blank();
+    if (ok) {
+      const pts = hinted ? 5 : 10, bonus = Math.min(streak, 5);
+      streak++; best = Math.max(best, streak); score += pts + bonus; right++;
+      await glitch(`  ${SYM.ok} ACCESS GRANTED   +${pts}` + (bonus ? `  +${bonus} streak` : ""), "g");
+      if (q.why) line([`    ${q.why}`, "grey"]);
+      if (q.id) { const r = E.rec(db, q.id); r.right++; r.streak++; save(db); }
+      if ([5, 10, 20].includes(streak)) { blank(); line([`  ${SYM.bolt.repeat(3)} ${streak} IN A ROW ${SYM.bolt.repeat(3)}`, "mg b"]); }
+      await pause(q.why ? 900 : 650);
+    } else {
+      streak = 0;
+      await glitch(`  ${SYM.bad} ACCESS DENIED`, "rd");
+      if (given && q.typed) {
+        const { you, ans } = E.diff(given, q.answers);
+        const join = (toks, bad) => toks.flatMap((t, k) => [k ? " " : "", [t.text, t.ok ? "g" : bad]]);
+        line(["  you    ", "grey"], ...(you.length ? join(you, "rd b") : [["(nothing)", "grey"]]));
+        line(["  answer ", "grey"], ...join(ans, "yl b"));
+      } else {
+        if (given) line(["  you    ", "grey"], [given, "rd b"]);
+        line(["  answer ", "grey"], [q.answers[0], "yl b"]);
+      }
+      if (q.answers.length > 1) line(["  also accepted: ", "grey"], [q.answers.slice(1).join("  |  "), "dk"]);
+      explain(q);
+      if (q.id) { const r = E.rec(db, q.id); r.wrong++; r.streak = 0; save(db); }
+      blank();
+      await waitKey("study it, then press any key or tap");
+    }
+  }
+  return finish(db, title, score, right, asked, best, t0);
+}
+
+function explain(q) {
+  const text = q.explain || q.why; if (!text) return;
+  const w = cols() - 6;
+  blank();
+  line(["  ── WHY ", "cy b"], ["─".repeat(Math.max(4, w - 6)), "dk"]);
+  for (const l of E.wrap(text, w)) line(["  │ ", "dk"], [l, "w"]);
+  if (q.src) line(["  │ ", "dk"], [`source: ${q.src}`, "grey"]);
+}
+
+async function finish(db, title, score, right, asked, best, t0, note) {
+  const before = E.rankFor(D.ranks, db.xp || 0)[0];
+  db.xp = (db.xp || 0) + score;
+  const after = E.rankFor(D.ranks, db.xp)[0];
+  const newBest = score > (db.best || 0);
+  db.sessions = (db.sessions || 0) + 1; db.best = Math.max(db.best || 0, score); save(db);
+  const secs = Math.round((performance.now() - t0) / 1000), acc = asked ? right / asked : 0;
+  clear(); blank();
+  box(note || "ROUND COMPLETE", title, [
+    [["correct ", "grey"], " ", [`${right}/${asked}`, "w b"], "   ", ...bar(acc, 16, acc >= 0.8 ? "g" : acc >= 0.5 ? "yl" : "rd"), " ", [`${Math.round(acc * 100)}%`, "w"]],
+    [["score   ", "grey"], " ", [String(score), "w b"], newBest && score ? [`   ${SYM.star} NEW BEST`, "mg b"] : ""],
+    [["streak  ", "grey"], " ", [String(best), "w b"], " best this round"],
+    [["time    ", "grey"], ` ${secs}s`],
+    [],
+    rankPieces(db),
+  ]);
+  if (after[1] !== before[1]) { blank(); await glitch(`  ${SYM.star} RANK UP: ${after[1].toUpperCase()} ${SYM.star}`, "mg"); }
+  if (asked) {
+    blank();
+    line([acc === 1 ? "  Perfect. Root access confirmed." : acc >= 0.8 ? "  Solid. Hit the missed ones next." : "  Run it again - the ones you missed come back more often.", acc >= 0.8 ? "g" : "yl"]);
+  }
+  blank();
+  await waitKey("press any key or tap for the menu");
+}
+
+function lightningSource(db) {
+  const pool = BANK.filter(isMid), recent = [];
+  return () => { const q = E.pick(db, pool.filter(p => !recent.includes(p.id)), 1)[0]; recent.push(q.id); recent.splice(0, Math.max(0, recent.length - 15)); return q; };
+}
+
+async function topicMenu(db) {
+  clear(); blank();
+  box("PICK TOPICS", "", [[["Choose one or more topics to drill.", "grey"]]]);
+  blank();
+  const opts = Object.entries(D.topics).map(([k, label]) => [k, k, `${label} (${BANK.filter(q => q.topic === k).length})`]);
+  const chosen = await checklist(opts);
+  if (!chosen.length) return;
+  const pool = BANK.filter(q => chosen.includes(q.topic));
+  blank();
+  const { value } = await ask(`  How many? (1-${pool.length}, Enter = 10) ${SYM.prompt} `);
+  const n = /^\d+$/.test(value.trim()) ? parseInt(value, 10) : 10;
+  await play(db, E.pick(db, pool, Math.max(1, Math.min(n, pool.length))), "Topics: " + chosen.join(", "));
+}
+
+async function stats(db) {
+  clear(); blank();
+  const seen = BANK.filter(q => db.q[q.id]).length;
+  const mastered = BANK.filter(q => (db.q[q.id] || {}).streak >= 2).length;
+  const missed = BANK.filter(q => E.isMissed(db, q.id)).length;
+  const rows = [rankPieces(db), [],
+    [["seen", "grey"], " ", [`${seen}/${BANK.length}`, "w b"], "   ", ["mastered", "grey"], " ", [String(mastered), "g b"], "   ", ["still missed", "grey"], " ", [String(missed), missed ? "rd b" : "grey"]],
+    [["rounds", "grey"], ` ${db.sessions || 0}   `, ["best", "grey"], ` ${db.best || 0}`], []];
+  for (const [k] of Object.entries(D.topics)) {
+    const qs = BANK.filter(q => q.topic === k), m = qs.filter(q => (db.q[q.id] || {}).streak >= 2).length, cls = TOPIC_CLS[k] || "g";
+    rows.push([D.midterm.includes(k) ? [SYM.star, "yl"] : " ", " ", [k.padEnd(9), cls + " b"], " ", ...bar(m / qs.length, Math.min(18, cols() - 26), cls), " ", [`${String(m).padStart(2)}/${qs.length}`, "w"]]);
+  }
+  rows.push([[`${SYM.star} = on the midterm`, "grey"]]);
+  box("PROGRESS", "", rows);
+  const weak = BANK.filter(q => E.isMissed(db, q.id));
+  if (weak.length) { blank(); line(["  Still shaky:", "yl b"]); weak.slice(0, 10).forEach(q => line([`   ${SYM.dot} `, "rd"], q.prompt)); }
+  blank();
+  const pick = await menu([["m", "Back to menu", ""], ["r", "Reset progress", "start over from zero"]], "enter or tap");
+  if (pick === "r") {
+    blank();
+    const { value } = await ask(`  Type yes to erase all progress in this browser ${SYM.prompt} `);
+    if (value.trim().toLowerCase() === "yes") { Object.assign(db, E.newDb()); save(db); line(["  Progress reset.", "g"]); await pause(800); }
+  }
+}
+
+async function about() {
+  let i = 0;
+  for (;;) {
+    clear(); blank();
+    const { title, rows } = D.about[i], w = cols() - 4, body = [];
+    for (const [lead, text] of rows) {
+      const pad = lead ? lead.length + 1 : 0;
+      const lines = text ? E.wrap(text, Math.max(20, w - pad)) : [""];
+      lines.forEach((l, k) => body.push([(lead && k === 0) ? [lead + " ", "g b"] : " ".repeat(pad), [l, "w"]]));
+      body.push([]);
+    }
+    body.pop();
+    box(title, `${i + 1}/${D.about.length}`, body);
+    blank();
+    const k = await menu([["n", "Next page", ""], ["p", "Previous page", ""], ["q", "Back to menu", ""]], "←/→ flip pages  •  q back");
+    if (k === "n") i = Math.min(i + 1, D.about.length - 1);
+    else if (k === "p") i = Math.max(i - 1, 0);
+    else return;
+  }
+}
+// arrow keys flip About pages too
+document.addEventListener("keydown", e => {
+  if (!handler || !document.querySelector(".sel")) return;
+  const map = { ArrowRight: "n", ArrowLeft: "p" };
+  if (map[e.key] && [...scr.querySelectorAll(".line")].some(l => l.textContent.includes("Next page"))) {
+    handler({ key: map[e.key], preventDefault() {} });
+  }
+});
+
+function home(db) {
+  clear(); blank();
+  const rows = logoRows(), W = cols();
+  if (W >= rows[0].length + 2) {
+    const pad = " ".repeat(Math.max(0, Math.floor((fullCols() - rows[0].length) / 2)));
+    rows.forEach(r => gradientLine(r, pad));
+    line(pad, ["  DCOM 142 // LINUX COMMAND TRAINER", "grey"]);
+  } else {
+    line(["  CMDQUIZ", "g b"]); line(["  DCOM 142 // Linux command trainer", "grey"]);
+  }
+  blank(); line("  ", ...rankPieces(db)); blank();
+}
+
+async function main() {
+  const db = load();
+  await intro();
+  for (;;) {
+    home(db);
+    const missed = BANK.filter(q => E.isMissed(db, q.id)).length;
+    const ch = await menu([
+      ["1", "Quick round", "10 mixed, modules 1-5"],
+      ["2", "Midterm blitz", "20 from modules 1-5"],
+      ["3", "Lightning", "90 seconds, as many as you can"],
+      ["4", "Pick topics", "choose what to drill"],
+      ["5", "Permission drills", "octal / rwx / umask / SUID math"],
+      ["6", "Missed questions", `${missed} waiting`],
+      ["7", "Progress", "rank, mastery by topic"],
+      ["8", "About", "how this game was made"],
+    ]);
+    if (ch === "1") await play(db, E.pick(db, BANK.filter(isMid), 10), "Quick round");
+    else if (ch === "2") await play(db, E.pick(db, BANK.filter(isMid), 20), "Midterm blitz");
+    else if (ch === "3") await play(db, lightningSource(db), "Lightning", 90);
+    else if (ch === "4") await topicMenu(db);
+    else if (ch === "5") await play(db, E.drillItems(10), "Permission drills");
+    else if (ch === "6") {
+      const pool = BANK.filter(q => E.isMissed(db, q.id));
+      if (pool.length) await play(db, E.pick(db, pool, 15), "Missed questions");
+      else { blank(); line(["  No missed questions. Play a round first.", "g"]); await waitKey(); }
+    }
+    else if (ch === "7") await stats(db);
+    else if (ch === "8") await about();
+  }
+}
+main();
+</script>
+</body>
+</html>

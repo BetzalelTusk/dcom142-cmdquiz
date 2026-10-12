@@ -6,7 +6,15 @@ A Matrix-themed terminal game for drilling the Linux commands from **DCOM 142** 
 
 Built by a DCOM 142 student with [Claude Code](https://claude.com/claude-code) to study for the midterm. Read the full story in the **[case study](CASE_STUDY.md)**. Not affiliated with or endorsed by CCBC.
 
-## Quick start
+## ▶ Play in your browser
+
+### **[betzaleltusk.github.io/dcom142-cmdquiz](https://betzaleltusk.github.io/dcom142-cmdquiz/)**
+
+Nothing to install, works on phones too. It's the same game in a simulated terminal: the same 152 questions, explanations, drills, streaks and ranks, graded exactly the same way. Your progress is saved in your browser.
+
+## Quick start (terminal version)
+
+Prefer the real terminal? This is the same game as a Python program.
 
 **Never used a terminal before? No problem.** Follow the steps for your computer and you'll be playing in about 5 minutes (most of that is waiting for installs). Every gray box is one command: click its copy button, paste it into the terminal, and press **Enter**.
 

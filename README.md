@@ -100,3 +100,7 @@ The screenshots above come from that emulator. The checks caught real bugs along
 ## Academic integrity
 
 This is a self-study tool. The DCOM 142 syllabus does not allow AI tools on graded work, so don't use this, or any AI, during a quiz, exam, Live Lab or Applied Live Lab.
+
+## License
+
+[MIT](LICENSE)

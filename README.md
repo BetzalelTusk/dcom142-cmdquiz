@@ -4,7 +4,7 @@ A Matrix-themed terminal game for drilling the Linux commands from **DCOM 142** 
 
 ![Intro: the title decodes out of digital rain](docs/intro.png)
 
-Built by a DCOM 142 student with [Claude Code](https://claude.com/claude-code) to study for the midterm. Not affiliated with or endorsed by CCBC.
+Built by a DCOM 142 student with [Claude Code](https://claude.com/claude-code) to study for the midterm. Read the full story in the **[case study](CASE_STUDY.md)**. Not affiliated with or endorsed by CCBC.
 
 ## Run it
 
@@ -40,6 +40,7 @@ Progress and XP are saved to `.cmdquiz_progress.json` next to the script.
 - **Pick topics:** a checklist of topics to drill.
 - **Permission drills:** endless generated octal / rwx / symbolic chmod / umask / SUID-SGID math, with the working shown step by step.
 - **Missed questions:** only the ones you've gotten wrong.
+- **About:** four pages on what the game is, how it was made, the numbers, and what the testing caught.
 
 Missed questions come up more often; a question counts as mastered after you get it right twice in a row. Streaks earn bonus points and XP moves you up six ranks, from Script Kiddie to Kernel Hacker.
 
@@ -73,6 +74,10 @@ The repo does **not** include any course files (slides, syllabi, textbook materi
 - **`harvest.js`:** exports your own course metadata (modules, assignments, grades, announcements, calendar) to JSON and can download course files for offline study. Keep anything it downloads private: course materials belong to your instructors and publishers.
 
 ## How it was made with Claude
+
+The short version is below; the **[case study](CASE_STUDY.md)** has the whole story, including what the checks caught and the lessons learned. The game's **About** screen has a summary too.
+
+![The About screen](docs/about.png)
 
 This was built in one long conversation in the Code tab of the Claude desktop app, with Claude (Opus 5.5 and Sonnet 5.5) writing the code and the student directing, playing and giving feedback.
 

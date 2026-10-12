@@ -1462,6 +1462,91 @@ def lightning_source(db):
     return nxt
 
 
+ABOUT_PAGES = [
+    ("WHAT THIS IS", [
+        ("", "cmdquiz is a Matrix-themed terminal trainer for the Linux commands in DCOM 142 "
+             "(Linux+ part 1) at the Community College of Baltimore County."),
+        ("", "Every question comes from the course's own Module 1-6 slides, and each explanation "
+             "shows the slide it came from."),
+        ("", "Made by Betzalel Tusk with Claude Code, in one conversation, while studying for the "
+             "Fall 2026 midterm."),
+        ("", "Self-study only: the DCOM 142 syllabus does not allow AI on graded work."),
+        ("", "github.com/BetzalelTusk/dcom142-cmdquiz  (MIT license)"),
+    ]),
+    ("HOW IT WAS MADE", [
+        ("1", "Asked Claude what was due that week. It read the course calendars through "
+              "Brightspace's read-only API and updated the study plan."),
+        ("2", "Asked for a command-line review game. First version: 140 questions, a forgiving "
+              "answer matcher, permission drills, saved progress."),
+        ("3", "Asked for more color and a Matrix-green cursor: rain intro, arrow-key menus, "
+              "ACCESS GRANTED / DENIED, streaks, XP ranks, lightning mode."),
+        ("4", "Asked for explanations on wrong answers, and for Enter to count as the second try."),
+        ("5", "Asked Claude to make sure every question was really taught. It read the slide "
+              "decks, dropped what the course hadn't covered and rebuilt the questions from the slides."),
+        ("6", "Published just the tools on GitHub, then added the MIT license."),
+    ]),
+    ("BY THE NUMBERS", [
+        ("152", "questions: 132 from Modules 1-5 (midterm), 20 from Module 6"),
+        ("149", "key phrases confirmed in the slide decks they cite"),
+        ("26", "of the original 140 questions survived word for word"),
+        ("4096", "permission modes checked against Python's own stat.filemode"),
+        ("0", "dependencies: Python standard library only"),
+        ("1", "slide typo caught: the deck says chmod -r, the real option is -R"),
+    ]),
+    ("WHAT THE CHECKS CAUGHT", [
+        (SYM["dot"], "a 'try again' message that didn't actually allow a retry"),
+        (SYM["dot"], "skip still asking 'was yours actually valid?'"),
+        (SYM["dot"], "a umask explanation that subtracted digits (wrong for umask 037 on a file)"),
+        (SYM["dot"], "a hint that gave away one-character answers"),
+        (SYM["dot"], "questions on topics the course hadn't taught yet"),
+        ("", ""),
+        ("", "Every change was checked before it shipped: unit tests, scripted play-throughs, "
+             "a perfect-play bot, and screenshots from a small terminal emulator."),
+    ]),
+]
+
+
+def about_page(i):
+    title, rows = ABOUT_PAGES[i]
+    w = width() - 4
+    body = []
+    for lead, text in rows:
+        pad = len(lead) + 1 if lead else 0
+        lines = textwrap.wrap(text, max(20, w - pad)) or [""]
+        for k, line in enumerate(lines):
+            head = (paint(lead, MATRIX, True) + " ") if (lead and k == 0) else " " * pad
+            body.append(head + paint(line, WHITE))
+        body.append("")
+    box(title, f"{i + 1}/{len(ABOUT_PAGES)}", body[:-1])
+
+
+def about():
+    if not INTERACTIVE:
+        for i in range(len(ABOUT_PAGES)):
+            about_page(i)
+            print()
+        return
+    i = 0
+    while True:
+        clear()
+        print()
+        about_page(i)
+        out(paint(f"\n  {SYM['h'] * 2} <-/-> or space flip pages  {SYM['dot']}  q back to the menu", DARK))
+        flush_keys()
+        try:
+            k = getkey()
+        except KeyboardInterrupt:
+            return
+        if k in ("right", "l", "n", "space", "enter"):
+            if i == len(ABOUT_PAGES) - 1 and k == "enter":
+                return
+            i = min(i + 1, len(ABOUT_PAGES) - 1)
+        elif k in ("left", "h", "p", "backspace"):
+            i = max(i - 1, 0)
+        elif k in ("q", "esc"):
+            return
+
+
 def show_stats(db):
     clear()
     seen = sum(1 for q in BANK if q["id"] in db["q"])
@@ -1536,6 +1621,7 @@ def main():
             ("5", "Permission drills", "octal / rwx / umask / SUID math"),
             ("6", "Missed questions", f"{miss} waiting"),
             ("7", "Progress", "rank, mastery by topic"),
+            ("8", "About", "how this game was made"),
             ("q", "Quit", "jack out"),
         ]
         ch = menu(options)
@@ -1563,8 +1649,10 @@ def main():
                 wait_key()
         elif ch == "7":
             show_stats(db)
+        elif ch == "8":
+            about()
         else:
-            print(paint("Pick 1-7 or q.", YELLOW))
+            print(paint("Pick 1-8 or q.", YELLOW))
         save(db)
 
 

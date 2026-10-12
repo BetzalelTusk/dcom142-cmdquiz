@@ -1,3 +1,3 @@
 # Beginner walkthrough
 
-The walkthrough now lives in the README: **[Beginner walkthrough](README.md#beginner-walkthrough)**.
+Setup instructions now live in the README: **[Quick start](README.md#quick-start)**.

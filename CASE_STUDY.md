@@ -54,7 +54,7 @@ The student asked to publish the project on GitHub. The project folder held thin
 - the student's grades
 - a class Teams meeting passcode
 
-Claude flagged these before pushing anything, and the student chose to publish only the tools. One script had the student's four course-section IDs hard-coded. It was changed to discover courses from whoever is signed in, so the public version is generic. An MIT license and this case study came after.
+Claude flagged these before pushing anything, and the student chose to publish only the tools. One script had the student's four course-section IDs hard-coded. It was changed to discover courses from whoever is signed in, so the public version is generic. An MIT license and this case study came after. Later, once classmates were going to clone the repo for studying, the Brightspace scripts were removed so the repo holds just the game and its docs.
 
 ## How quality was checked
 
@@ -84,7 +84,7 @@ One mistake made it into the chat but not into the product. Claude reported "39 
 - **152 questions:** 132 from Modules 1-5, 20 from Module 6, with 200 accepted answer variants.
 - **Fully traced:** every question has an explanation and a slide source.
 - **No setup:** one file, Python standard library only, runs on Windows, macOS and Linux.
-- **Open source:** read-only Brightspace helper scripts that work for any student, published under the MIT license.
+- **Open source:** published under the MIT license, with a quick-start guide (`git clone` and go) for classmates who have never used a terminal.
 
 ## Lessons
 

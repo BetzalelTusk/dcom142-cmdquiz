@@ -6,62 +6,36 @@ A Matrix-themed terminal game for drilling the Linux commands from **DCOM 142** 
 
 Built by a DCOM 142 student with [Claude Code](https://claude.com/claude-code) to study for the midterm. Read the full story in the **[case study](CASE_STUDY.md)**. Not affiliated with or endorsed by CCBC.
 
-## Run it
+## Quick start
 
-> **Never used the command line?** Follow the **[beginner walkthrough](#beginner-walkthrough)** below. It's copy-and-paste, Windows first, then Mac.
+**Never used a terminal before? No problem.** Follow the steps for your computer and you'll be playing in about 5 minutes (most of that is waiting for installs). Every gray box is one command: click its copy button, paste it into the terminal, and press **Enter**.
 
-```bash
-git clone https://github.com/BetzalelTusk/dcom142-cmdquiz.git
-cd dcom142-cmdquiz
-python cmdquiz.py
-```
+- [Windows](#windows)
+- [Mac](#mac)
+- [Playing](#playing)
+- [If something goes wrong](#if-something-goes-wrong)
 
-You need Git, plus Python 3.8 or newer and nothing else (standard library only). It works on Windows, macOS and Linux and looks best in Windows Terminal or any terminal with 24-bit color. Use `python3` instead of `python` on a Mac.
-
-| Option | Effect |
-|---|---|
-| `--no-intro` | skip the digital-rain intro |
-| `--no-anim` | turn off all animation |
-| `--plain` | ASCII only, for terminals that show boxes instead of symbols |
-
-Progress and XP are saved to `.cmdquiz_progress.json` in the game's folder.
-
-## Beginner walkthrough
-
-For DCOM 142 classmates who have **never used the command line**. You'll copy and paste a few lines; it takes a few minutes, mostly waiting for installs. After the first time, starting the game takes two commands.
-
-**How to paste into a terminal:** press **Ctrl + V** (Mac: **Cmd + V**), or right-click. Press **Enter** after each line.
-
-**Jump to:** [Windows](#windows) · [Mac](#mac) · [Playing](#playing) · [Next time](#next-time) · [If something goes wrong](#if-something-goes-wrong)
+<sub>Needs Git and Python 3.8 or newer, nothing else. Works on Windows, macOS and Linux.</sub>
 
 ### Windows
 
-**1. Open a terminal.** Press the **Windows key**, type `terminal`, press **Enter**. (If nothing comes up, type `cmd` instead.)
+**1. Open a terminal.** Press the **Windows key**, type `terminal` and press **Enter**. (No "Terminal" app? Type `cmd` instead.)
 
-**2. Get Python.** Type this and press Enter:
-
-```
-python --version
-```
-
-- If you see **`Python 3.x`**, you already have it. Go to step 3.
-- If it says **`Python was not found`**, type `python` on its own and press Enter. The **Microsoft Store** opens on the Python page. Click **Get** (or **Install**), wait for it to finish, then come back to the terminal.
-
-**3. Get Git.** Paste this and press Enter:
+**2. Install Git and Python.** Paste these one at a time, pressing **Enter** after each. If Windows asks *"Do you want to allow this app to make changes?"*, click **Yes**. Already have both? Skip to step 3.
 
 ```
-winget install --id Git.Git -e --source winget --accept-package-agreements --accept-source-agreements
+winget install -e --id Git.Git --accept-source-agreements --accept-package-agreements
+```
+```
+winget install -e --id Python.Python.3.13 --accept-source-agreements --accept-package-agreements
 ```
 
-If Windows asks *"Do you want to allow this app to make changes?"*, click **Yes**. Wait for **Successfully installed**.
-*(Already have Git? `git --version` shows a version number. Then skip this step.)*
+When both say they're done, **close the terminal and open a new one** (step 1 again). A fresh terminal is what lets it find Git and Python.
 
-**4. Close the terminal and open a new one** (step 1 again). A terminal that was already open doesn't know Git was just installed.
-
-**5. Download the game, go into its folder and start it.** Paste these one at a time, pressing Enter after each:
+**3. Download the game and play:**
 
 ```
-git clone https://github.com/BetzalelTusk/dcom142-cmdquiz.git
+git clone https://github.com/BetzalelTusk/dcom142-cmdquiz
 ```
 ```
 cd dcom142-cmdquiz
@@ -70,25 +44,31 @@ cd dcom142-cmdquiz
 python cmdquiz.py
 ```
 
-Green "digital rain" falls, then the **CMDQUIZ** menu appears. That's it. 🎉 See [Playing](#playing).
+That's it. 🎉 **Next time** you just open a terminal and run:
+
+```
+cd dcom142-cmdquiz
+```
+```
+python cmdquiz.py
+```
 
 ### Mac
 
-**1. Open Terminal.** Press **Cmd (⌘) + Space**, type `Terminal`, press **Enter**.
+**1. Open Terminal.** Press **Command (⌘) + Space**, type `Terminal` and press **Enter**.
 
-**2. Get Git and Python together.** Type this and press Enter:
+**2. Get Git and Python.** Run this:
 
 ```
 git --version
 ```
 
-- If you see a version number, you already have them. Go to step 3.
-- If a box asks to install the **command line developer tools**, click **Install**, then **Agree**, and wait for it to finish. That one install gives you both `git` and `python3`.
+If a window pops up saying the command needs the **command line developer tools**, click **Install** and wait for it to finish. That one install gives you both Git and Python. If you see a version number instead, you already have them.
 
-**3. Download the game, go into its folder and start it.** Paste these one at a time, pressing Enter after each:
+**3. Download the game and play:**
 
 ```
-git clone https://github.com/BetzalelTusk/dcom142-cmdquiz.git
+git clone https://github.com/BetzalelTusk/dcom142-cmdquiz
 ```
 ```
 cd dcom142-cmdquiz
@@ -97,68 +77,72 @@ cd dcom142-cmdquiz
 python3 cmdquiz.py
 ```
 
-(On a Mac it's `python3`, with a 3.)
+**Next time:** open Terminal, then `cd dcom142-cmdquiz` and `python3 cmdquiz.py`.
+
+### Getting updates
+
+When the game gets new questions or fixes, go into the folder and pull the latest version. Your progress is kept.
+
+```
+cd dcom142-cmdquiz
+```
+```
+git pull
+```
 
 ### Playing
 
-The game gives you a task, like *"Add alice to the group developers WITHOUT removing her other groups"*, and you type the Linux command that does it. **You type the Linux commands into the game, not into your terminal.** Windows wouldn't understand `groupadd`, and that's fine, because the game checks your answers itself.
+The game gives you a task, like *"Add alice to the group developers WITHOUT removing her other groups"*, and you type the Linux command that does it.
+
+> **Type your answers into the game, not straight into the terminal.** Windows on its own doesn't understand Linux commands like `groupadd`. The game checks your answers itself, so it works on any computer.
 
 | Key | What it does |
 |---|---|
-| **↑ / ↓**, then **Enter** | Move around the menus and pick an option (or just press its number) |
+| **↑ / ↓**, then **Enter** | Move around the menus (or press the option's number) |
 | Type your answer, then **Enter** | Submit an answer |
 | `?` | Get a hint |
-| **Enter** on an empty line *after a wrong answer* | Show the answer (that counts as your second try) |
+| **Enter** on an empty line *after a wrong answer* | Show the answer (counts as your second try) |
 | `skip` | Give up and see the answer |
 | `q` | End the round, or quit from the main menu |
 | **Ctrl + C** | Emergency exit, works anywhere |
 
-You get **two tries** per question. When you miss, the game shows your answer next to the correct one, explains it, and names the slide it's from. Good places to start: **Permission drills** (chmod / umask number practice) and **Midterm blitz** (20 questions from Modules 1-5).
+**Good places to start:** **Permission drills** (chmod and umask number practice) and **Midterm blitz** (20 questions from Modules 1-5). Typing `sudo` in front is optional, and `-la` counts the same as `-al`.
 
-### Next time
+**Options:** add these after `cmdquiz.py`, e.g. `python cmdquiz.py --no-intro`.
 
-Open a terminal and run these two lines:
-
-| Windows | Mac |
+| Option | Effect |
 |---|---|
-| `cd dcom142-cmdquiz` | `cd dcom142-cmdquiz` |
-| `python cmdquiz.py` | `python3 cmdquiz.py` |
-
-**Get the newest version** whenever the game is updated: `cd dcom142-cmdquiz` and then run `git pull`. Your progress is kept.
-
-**Tip:** the **↑ (up arrow)** key brings back the last command you typed.
+| `--no-intro` | skip the digital-rain intro |
+| `--no-anim` | turn off all animation |
+| `--plain` | plain text, for terminals that show boxes instead of symbols |
 
 ### If something goes wrong
 
 | What you see | What to do |
 |---|---|
-| `'winget' is not recognized` | Update **App Installer** from the Microsoft Store, then try again. Or install Git from **https://git-scm.com/download/win** (run the download and keep clicking **Next**). |
-| `'git' is not recognized` right after installing Git | Close the terminal and open a new one (Windows step 4). |
-| `'python' is not recognized`, or `Python was not found` | Type `python` and press Enter to open the Microsoft Store page, then click **Get**. Or try `py cmdquiz.py` instead. |
-| `fatal: destination path 'dcom142-cmdquiz' already exists` | You already downloaded it. Just run `cd dcom142-cmdquiz`, then start the game. |
+| `git` or `python` *is not recognized* right after installing | Close the terminal and open a new one. Only new terminals see new installs. |
+| `winget` *is not recognized* | Install **App Installer** from the Microsoft Store, then try again. Or install Git from [git-scm.com](https://git-scm.com/download/win) and Python from [python.org](https://www.python.org/downloads/) (tick **"Add python.exe to PATH"**). |
+| Typing `python` opens the Microsoft Store | Python isn't installed yet, or this terminal was open before the install. Do Windows step 2, then open a new terminal. |
+| `destination path 'dcom142-cmdquiz' already exists` | You already downloaded it. Run `cd dcom142-cmdquiz` and play, or run `git pull` to update. |
 | `can't open file ... cmdquiz.py` | You're not in the game's folder. Run `cd dcom142-cmdquiz` first. |
-| Boxes or question marks instead of lines and arrows | Start it with `python cmdquiz.py --plain` |
-| Colors look odd or the screen flickers | Use the free **Windows Terminal** app from the Microsoft Store, or start with `python cmdquiz.py --no-anim` |
-| You can't install anything (e.g. a school computer) | Use your own computer. School machines often block installs. |
-| You want to start over | Delete the file `.cmdquiz_progress.json` inside the `dcom142-cmdquiz` folder. |
+| Boxes or question marks instead of symbols | Run `python cmdquiz.py --plain`. |
+| Colors look wrong or the screen flickers | Run `python cmdquiz.py --no-anim`, or use the free **Windows Terminal** app from the Microsoft Store. |
+| Installs are blocked (e.g. a school computer) | Use your own computer. |
+| You want to reset your progress | Delete `.cmdquiz_progress.json` inside the `dcom142-cmdquiz` folder. |
 
-<details>
-<summary><b>What did I just type?</b> (optional, and good Linux+ practice)</summary>
+Still stuck? [Open an issue](https://github.com/BetzalelTusk/dcom142-cmdquiz/issues) and describe what you see.
 
-| You typed | What it does | Linux+ connection |
+### What you just typed (optional reading)
+
+Those commands use the same **command, option, argument** pattern from Module 1:
+
+| You typed | What it did | DCOM 142 connection |
 |---|---|---|
-| `python --version`, `git --version` | Runs a program with an **option** that asks for its version | Command + option, like `ls -la` (Module 1) |
-| `winget install ...` | Asks Windows' package manager to install software | Same idea as `dnf install` / `apt install` (Module 10) |
-| `git clone <url>` | Downloads a full copy of a GitHub repository into a new folder | |
-| `cd dcom142-cmdquiz` | Moves into that folder | `cd` (Module 1) |
-| `python cmdquiz.py` | Runs a program and gives it a file as an **argument** | Command + argument, like `cat notes.txt` |
-| **↑ arrow** | Brings back your last command | Bash `history` (Module 1) |
-
-A **terminal** (also called the *command line* or *CLI*) is a window where you control the computer by typing instead of clicking. The text waiting for you, like `C:\Users\you>`, is the **prompt**.
-
-</details>
-
-Questions or something unclear? Open an issue on the [GitHub page](https://github.com/BetzalelTusk/dcom142-cmdquiz/issues).
+| `winget install ...` | A **package manager** downloaded and installed software | Linux has the same idea with `dnf` and `apt`, covered later in the course |
+| `git clone <address>` | Copied the whole project from GitHub onto your computer | |
+| `cd dcom142-cmdquiz` | Moved the terminal into that folder | `cd`, Module 1 |
+| `python cmdquiz.py` | Ran a program and gave it a file as an **argument** | Like `cat notes.txt` |
+| `python cmdquiz.py --plain` | The same, with an **option** | Like `ls -la` |
 
 ## How it plays
 
@@ -202,14 +186,6 @@ All **152 questions** are from the Fall 2026 DCOM 142 course itself: the instruc
 Module 6 questions stay out of the default rounds until you pick them under **Pick topics**.
 
 The repo does **not** include any course files (slides, syllabi, textbook material). The questions and explanations are written from scratch and point to the slide rather than copying it.
-
-## Brightspace helper scripts
-
-`brightspace/` holds three small scripts used while building this. You paste them into the browser console while logged in to your own Brightspace (D2L) session. They only send GET requests, authenticate with the session you are already signed in on, and discover courses from your own enrollments.
-
-- **`thisweek.js`:** lists what's due this week and coming up (calendar events, assignments, quizzes, recent announcements) across all your courses, and marks items that already have a grade.
-- **`probe.js`:** checks which Valence API versions your school exposes and lists your enrollments.
-- **`harvest.js`:** exports your own course metadata (modules, assignments, grades, announcements, calendar) to JSON and can download course files for offline study. Keep anything it downloads private: course materials belong to your instructors and publishers.
 
 ## How it was made with Claude
 

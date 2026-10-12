@@ -1098,20 +1098,6 @@ def ask(prompt):
         out(RESET)
 
 
-def yes_no(prompt):
-    if INTERACTIVE:
-        out(paint(prompt + " [y/N] ", GREY))
-        flush_keys()
-        try:
-            k = getkey()
-        except KeyboardInterrupt:
-            k = "n"
-        print(paint("y", MATRIX, True) if k in ("y", "Y") else paint("n", GREY))
-        return k in ("y", "Y")
-    a = ask(prompt + " (y/N) ")
-    return bool(a) and a.strip().lower() == "y"
-
-
 def menu(options, title=None):
     """Arrow-key menu. options: list of (key, label, note). Returns a key, or None for quit."""
     if not INTERACTIVE:
@@ -1307,7 +1293,7 @@ def play(db, source, title, time_limit=None):
         tag = paint(f"[{q['topic'].upper()}]", col, True)
         print()
         typewrite(f"  {tag} " + paint(q["prompt"], WHITE, True) + "\n\n")
-        hinted, tries, ok, given, skipped = False, 0, False, None, False
+        hinted, tries, ok, given = False, 0, False, None
         while True:
             ans = ask(f"  {SYM['prompt']} ")
             if ans is None or ans.strip().lower() in ("q", "quit", "exit"):
@@ -1335,8 +1321,7 @@ def play(db, source, title, time_limit=None):
                     out("\033[1A\r\033[2K")  # redraw the prompt on the same line instead of adding a blank one
                 continue
             if a.lower() in ("skip", "s", "idk", ""):
-                skipped = True  # a bare Enter after a miss counts as the second attempt
-                break
+                break  # a bare Enter after a miss counts as the second attempt
             given = a
             if q.get("loose"):
                 ok = check_loose(a, q["answers"])
@@ -1379,22 +1364,10 @@ def play(db, source, title, time_limit=None):
             if len(q["answers"]) > 1:
                 print(paint("  also accepted: ", GREY) + paint("  |  ".join(q["answers"][1:]), DARK))
             show_explanation(q)
-            counted = False
-            if given and not skipped and q.get("typed", True):
-                print()
-                counted = yes_no("  Was yours actually valid? Count it anyway")
-            if counted:
-                score += 8
-                right += 1
-                if q["id"]:
-                    r = rec(db, q["id"]); r["right"] += 1; r["streak"] += 1
-                print(paint(f"  {SYM['ok']} counted", MATRIX))
-                pause(0.6)
-            else:
-                if q["id"]:
-                    r = rec(db, q["id"]); r["wrong"] += 1; r["streak"] = 0
-                print()
-                wait_key("study it, then press any key")
+            if q["id"]:
+                r = rec(db, q["id"]); r["wrong"] += 1; r["streak"] = 0
+            print()
+            wait_key("study it, then press any key")
         if not INTERACTIVE:
             print()
     finish(db, title, score, right, asked, best_streak, t0)

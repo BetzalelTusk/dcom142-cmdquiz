@@ -64,7 +64,7 @@ Nothing was handed back untested. The checks grew with the project:
 |---|---|
 | Unit tests | the answer matcher (accepted variations and wrong answers), question-bank integrity, explanation coverage, course sources |
 | Ground-truth comparison | all 4,096 permission modes compared against Python's `stat.filemode`; symbolic chmod checked for 14 expressions on all 512 starting modes |
-| Scripted sessions | keystrokes piped through every menu, including hints, retries, skips, overrides, quitting mid-round and input ending without warning |
+| Scripted sessions | keystrokes piped through every menu, including hints, retries, skips, quitting mid-round and input ending without warning |
 | Perfect-play bot | answers every question correctly, to test scoring, streak bonuses, XP, ranks and saving |
 | Terminal emulator | interactive screens replayed through a small emulator and rendered to PNG, so the visuals could actually be looked at (the README screenshots come from it) |
 | Source check | each question's key phrase searched for in the slide deck it cites |

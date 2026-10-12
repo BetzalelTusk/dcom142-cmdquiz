@@ -29,7 +29,7 @@ Progress and XP are saved to `.cmdquiz_progress.json` next to the script.
 - **Arrow keys** (or j/k) and Enter move through the menus, or press the option's number.
 - **Type the command** at the green prompt. Your text and cursor are Matrix green. Typing `sudo` is optional, quote style doesn't matter, and `-la` counts the same as `-al`, but argument order does matter (`chown file alice` is wrong).
 - **One retry.** A wrong answer gets one more try. Press **Enter** on that second try to see the answer straight away. `?` gives a hint and `skip` reveals the answer.
-- **On a miss** you get a word-by-word comparison (green matches, red is what you typed wrong, yellow is what was expected), the accepted alternatives, an explanation, and the slide it comes from. If your answer was actually valid, you can count it anyway.
+- **On a miss** you get a word-by-word comparison (green matches, red is what you typed wrong, yellow is what was expected), the accepted alternatives, an explanation, and the slide it comes from.
 
 ![A wrong answer with the explanation panel](docs/wrong-answer.png)
 

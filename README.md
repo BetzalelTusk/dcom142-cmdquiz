@@ -12,7 +12,7 @@ Built by a DCOM 142 student with [Claude Code](https://claude.com/claude-code) t
 |---|---|---|
 | **How** | Open a link in your browser | `git clone` it, then run it in a terminal |
 | **Setup** | None | About 5 minutes the first time |
-| **Works on** | Any computer, phones and tablets | Windows, Mac and Linux |
+| **Works on** | Any computer, phones and tablets | Windows, Mac, Linux and Android (with Termux) |
 | **Internet** | Needed | Not needed once downloaded |
 | **Progress is saved** | In that browser | In the game's folder |
 | **Best for** | Studying anywhere, right now | Practising in a real terminal |
@@ -33,6 +33,7 @@ Download the game and run it in a real terminal. It's one Python file.
 
 - [Windows](#windows)
 - [Mac](#mac)
+- [Android (Termux)](#android-termux)
 - [Playing](#playing)
 - [If something goes wrong](#if-something-goes-wrong)
 
@@ -99,6 +100,39 @@ python3 cmdquiz.py
 ```
 
 **Next time:** open Terminal, then `cd dcom142-cmdquiz` and `python3 cmdquiz.py`.
+
+### Android (Termux)
+
+*Just want to play on your phone? The [live link](#option-1-live-link) is easier. This is for running the real terminal version.*
+
+**1. Install Termux.** Get it from **[F-Droid](https://f-droid.org/packages/com.termux/)**, the source the Termux developers recommend. Open it once it's installed.
+
+**2. Install Git and Python.** Run these one at a time. If it stops to ask about a config file, just press **Enter** to keep the default.
+
+```
+pkg upgrade -y
+```
+```
+pkg install -y git python
+```
+
+**3. Download the game and play:**
+
+```
+git clone https://github.com/BetzalelTusk/dcom142-cmdquiz
+```
+```
+cd dcom142-cmdquiz
+```
+```
+python cmdquiz.py
+```
+
+**Tips for phones:**
+- The **arrow keys** are in the extra row of keys above the keyboard. You can also press the **number** of a menu option.
+- **Pinch to zoom out** or turn your phone sideways for more room. The game fits itself to the screen either way.
+
+**Next time:** open Termux, then `cd dcom142-cmdquiz` and `python cmdquiz.py`.
 
 ### Getting updates
 

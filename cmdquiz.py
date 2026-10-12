@@ -821,8 +821,25 @@ def out(s=""):
     sys.stdout.flush()
 
 
+def term_cols():
+    return shutil.get_terminal_size((80, 24)).columns
+
+
 def width():
-    return max(44, min(78, shutil.get_terminal_size((80, 24)).columns - 2))
+    return max(32, min(78, term_cols() - 2))
+
+
+def narrow():
+    """Phone-sized terminal (e.g. Termux in portrait): drop side notes so nothing wraps."""
+    return term_cols() < 60
+
+
+def fit(note, used):
+    """Trim a side note to the room left after `used` columns, so redrawn rows never wrap."""
+    room = term_cols() - 1 - used
+    if room < 8:
+        return ""
+    return note if len(note) <= room else note[:room - 1].rstrip() + "…"
 
 
 def clear():
@@ -1048,6 +1065,8 @@ def box(title, right, body):
     w = width()
     t = f"{SYM['h']} {title} "
     r = f" {right} {SYM['h']}" if right else SYM["h"]
+    if len(t) + len(r) + 3 > w:   # narrow screen: drop the right-hand label rather than overflow
+        r = SYM["h"]
     fill = max(1, w - 2 - vlen(t) - vlen(r))
     print(paint(SYM["tl"], DARK) + paint(t, MATRIX, True) + paint(SYM["h"] * fill, DARK) + paint(r, GREY) + paint(SYM["tr"], DARK))
     for line in body:
@@ -1079,10 +1098,12 @@ def rank_line(db):
     (lo, name), nxt = rank_for(xp)
     if nxt:
         frac = (xp - lo) / (nxt[0] - lo)
-        prog = f"{bar(frac, 16, CYAN)} {paint(f'{xp}/{nxt[0]} XP', GREY)}"
+        meter = "" if width() < 40 else bar(frac, max(6, min(16, width() - 36)), CYAN) + " "
+        prog = f"{meter}{paint(f'{xp}/{nxt[0]} XP', GREY)}"
     else:
         prog = paint(f"{xp} XP  MAX RANK", MAGENTA, True)
-    return f"{paint('RANK', GREY)} {paint(name.upper(), CYAN, True)}  {prog}"
+    label = "" if narrow() else f"{paint('RANK', GREY)} "
+    return f"{label}{paint(name.upper(), CYAN, True)}  {prog}"
 
 
 # --------------------------------------------------------------------------- input
@@ -1115,6 +1136,7 @@ def menu(options, title=None):
             out(f"\033[{len(options)}A")
         for i, (key, label, note) in enumerate(options):
             out("\r\033[2K")
+            note = fit(note, 3 + len(key) + 2 + 20 + 2)   # menus redraw in place, so every row must fit on one line
             if i == sel:
                 line = f" {SYM['sel']} {key}  {label:<20}"
                 out(bg((0, 70, 20)) + BOLD + fg(MATRIX_HI) + line + RESET + "  " + paint(note, MATRIX) + "\n")
@@ -1124,7 +1146,10 @@ def menu(options, title=None):
     out("\033[?25l")
     try:
         draw(True)
-        out(paint(f"\n  {SYM['h'] * 2} arrows/j/k move  {SYM['dot']}  enter or number picks  {SYM['dot']}  q quits", DARK))
+        hint = f"{SYM['h'] * 2} arrows/j/k move  {SYM['dot']}  enter or number picks  {SYM['dot']}  q quits"
+        if len(hint) + 3 > term_cols():
+            hint = f"{SYM['h'] * 2} arrows + enter"
+        out(paint(f"\n  {hint}", DARK))
         out("\033[1A\r")
         while True:
             k = getkey()
@@ -1169,6 +1194,7 @@ def checklist(options):
         for i, (key, label, note) in enumerate(options):
             box_ = f"[{SYM['ok'] if key in on else ' '}]"
             col = TOPIC_COLOR.get(key, GREEN)
+            note = fit(note, 3 + len(box_) + 1 + 9 + 2)
             row = f" {box_} {key:<9} {note}"
             out("\r\033[2K")
             if i == sel:
@@ -1179,7 +1205,10 @@ def checklist(options):
     out("\033[?25l")
     try:
         draw(True)
-        out(paint(f"\n  {SYM['h'] * 2} space toggles  {SYM['dot']}  a = all midterm topics  {SYM['dot']}  enter starts  {SYM['dot']}  q back", DARK))
+        hint = f"{SYM['h'] * 2} space toggles  {SYM['dot']}  a = all midterm topics  {SYM['dot']}  enter starts  {SYM['dot']}  q back"
+        if len(hint) + 3 > term_cols():
+            hint = f"{SYM['h'] * 2} space toggles, enter"
+        out(paint(f"\n  {hint}", DARK))
         out("\033[1A\r")
         while True:
             k = getkey()
@@ -1251,7 +1280,8 @@ def show_explanation(q):
     for line in textwrap.wrap(text, w, break_on_hyphens=False):
         print(paint(f"  {SYM['v']} ", DARK) + paint(line, WHITE))
     if q.get("src"):
-        print(paint(f"  {SYM['v']} ", DARK) + paint(f"source: {q['src']}", GREY))
+        for line in textwrap.wrap(f"source: {q['src']}", w, break_on_hyphens=False):
+            print(paint(f"  {SYM['v']} ", DARK) + paint(line, GREY))
 
 
 # --------------------------------------------------------------------------- game loop
@@ -1286,13 +1316,18 @@ def play(db, source, title, time_limit=None):
         else:
             right_lbl = f"Q {i}/{total}"
             frac = asked / total
-        box(title.upper(), right_lbl, [
-            f"{bar(frac, 22, CYAN if time_limit else MATRIX)}   {paint('score', GREY)} {paint(str(score), WHITE, True)}   {streak_txt(streak)}",
-        ])
+        meter = bar(frac, max(8, min(22, width() - 14)), CYAN if time_limit else MATRIX)
+        stats = f"{paint('score', GREY)} {paint(str(score), WHITE, True)}   {streak_txt(streak)}"
+        box(title.upper(), right_lbl, [meter, stats] if narrow() else [f"{meter}   {stats}"])
         col = TOPIC_COLOR.get(q["topic"], GREEN)
         tag = paint(f"[{q['topic'].upper()}]", col, True)
         print()
-        typewrite(f"  {tag} " + paint(q["prompt"], WHITE, True) + "\n\n")
+        # word-wrap the task so it reads cleanly on narrow screens; the topic tag stays on the first line
+        tag_txt = f"[{q['topic'].upper()}]"
+        lines = textwrap.wrap(f"{tag_txt} {q['prompt']}", max(20, term_cols() - 3), break_on_hyphens=False)
+        first = f"  {tag} " + paint(lines[0][len(tag_txt) + 1:], WHITE, True)
+        rest = "".join("\n  " + paint(l, WHITE, True) for l in lines[1:])
+        typewrite(first + rest + "\n\n")
         hinted, tries, ok, given = False, 0, False, None
         while True:
             ans = ask(f"  {SYM['prompt']} ")
@@ -1334,7 +1369,8 @@ def play(db, source, title, time_limit=None):
             tries += 1
             if tries >= 2:
                 break
-            print(paint(f"    {SYM['bad']} not quite", RED, True) + paint(" - one more try  (Enter = show answer, ? = hint)", GREY))
+            tip = " - try again" if narrow() else " - one more try  (Enter = show answer, ? = hint)"
+            print(paint(f"    {SYM['bad']} not quite", RED, True) + paint(tip, GREY))
         asked = i
         print()
         if ok:
@@ -1391,7 +1427,7 @@ def finish(db, title, score, right, asked, best_streak, t0, note=None):
     else:
         head = "ROUND COMPLETE" if not note else note
         box(head, title, [
-            f"{paint('correct ', GREY)} {paint(f'{right}/{asked}', WHITE, True)}   {bar(acc, 20, MATRIX if acc >= 0.8 else YELLOW if acc >= 0.5 else RED)} {paint(f'{acc:.0%}', WHITE)}",
+            f"{paint('correct ', GREY)} {paint(f'{right}/{asked}', WHITE, True)}   {bar(acc, max(4, min(20, width() - 26)), MATRIX if acc >= 0.8 else YELLOW if acc >= 0.5 else RED)} {paint(f'{acc:.0%}', WHITE)}",
             f"{paint('score   ', GREY)} {paint(str(score), WHITE, True)}" + (paint(f"   {SYM['star']} NEW BEST", MAGENTA, True) if new_best and score else ""),
             f"{paint('streak  ', GREY)} {paint(str(best_streak), WHITE, True)} best this round",
             f"{paint('time    ', GREY)} {secs}s",
@@ -1525,16 +1561,18 @@ def show_stats(db):
     seen = sum(1 for q in BANK if q["id"] in db["q"])
     mastered = sum(1 for q in BANK if db["q"].get(q["id"], {}).get("streak", 0) >= 2)
     missed = sum(1 for q in BANK if is_missed(db, q["id"]))
-    rows = [rank_line(db), "",
-            f"{paint('seen', GREY)} {paint(f'{seen}/{len(BANK)}', WHITE, True)}   {paint('mastered', GREY)} {paint(str(mastered), MATRIX, True)}   "
-            f"{paint('still missed', GREY)} {paint(str(missed), RED if missed else GREY, True)}   {paint('rounds', GREY)} {db.get('sessions', 0)}   {paint('best', GREY)} {db.get('best', 0)}",
-            ""]
+    counts = [f"{paint('seen', GREY)} {paint(f'{seen}/{len(BANK)}', WHITE, True)}   {paint('mastered', GREY)} {paint(str(mastered), MATRIX, True)}",
+              f"{paint('still missed', GREY)} {paint(str(missed), RED if missed else GREY, True)}   {paint('rounds', GREY)} {db.get('sessions', 0)}   {paint('best', GREY)} {db.get('best', 0)}"]
+    if width() < 44:
+        counts = [counts[0], f"{paint('still missed', GREY)} {paint(str(missed), RED if missed else GREY, True)}",
+                  f"{paint('rounds', GREY)} {db.get('sessions', 0)}   {paint('best', GREY)} {db.get('best', 0)}"]
+    rows = [rank_line(db), ""] + (counts if width() < 70 else ["   ".join(counts)]) + [""]
     for key, label in TOPICS.items():
         qs = [q for q in BANK if q["topic"] == key]
         m = sum(1 for q in qs if db["q"].get(q["id"], {}).get("streak", 0) >= 2)
         col = TOPIC_COLOR.get(key, GREEN)
         star = paint(SYM["star"], YELLOW) if key in MIDTERM else " "
-        rows.append(f"{star} {paint(f'{key:<9}', col, True)} {bar(m / len(qs), 18, col)} {paint(f'{m:>2}/{len(qs):<2}', WHITE)}")
+        rows.append(f"{star} {paint(f'{key:<9}', col, True)} {bar(m / len(qs), max(6, min(18, width() - 26)), col)} {paint(f'{m:>2}/{len(qs):<2}', WHITE)}")
     rows.append(paint(f"{SYM['star']} = on the midterm", GREY))
     box("PROGRESS", "", rows)
     weak = [q for q in BANK if is_missed(db, q["id"])]
@@ -1572,7 +1610,7 @@ def home(db):
         print()
     else:
         print(paint("\nDCOM 142 command trainer", MATRIX, True))
-        print("Type the command from memory. Midterm is about modules 1-5.")
+        print("Type the command from memory.")
     if INTERACTIVE:
         print("  " + rank_line(db))
         print()

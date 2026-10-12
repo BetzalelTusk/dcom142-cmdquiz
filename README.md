@@ -6,15 +6,28 @@ A Matrix-themed terminal game for drilling the Linux commands from **DCOM 142** 
 
 Built by a DCOM 142 student with [Claude Code](https://claude.com/claude-code) to study for the midterm. Read the full story in the **[case study](CASE_STUDY.md)**. Not affiliated with or endorsed by CCBC.
 
-## ▶ Play in your browser
+## Two ways to play
 
-### **[betzaleltusk.github.io/dcom142-cmdquiz](https://betzaleltusk.github.io/dcom142-cmdquiz/)**
+| | **[1. Live link](#option-1-live-link)** | **[2. Download](#option-2-download)** |
+|---|---|---|
+| **How** | Open a link in your browser | `git clone` it, then run it in a terminal |
+| **Setup** | None | About 5 minutes the first time |
+| **Works on** | Any computer, phones and tablets | Windows, Mac and Linux |
+| **Internet** | Needed | Not needed once downloaded |
+| **Progress is saved** | In that browser | In the game's folder |
+| **Best for** | Studying anywhere, right now | Practising in a real terminal |
 
-Nothing to install, works on phones too. It's the same game in a simulated terminal: the same 152 questions, explanations, drills, streaks and ranks, graded exactly the same way. Your progress is saved in your browser.
+Both are the same game: the same 152 questions, explanations, drills, streaks and ranks, graded exactly the same way.
 
-## Quick start (terminal version)
+## Option 1: Live link
 
-Prefer the real terminal? This is the same game as a Python program.
+### ▶ **[betzaleltusk.github.io/dcom142-cmdquiz](https://betzaleltusk.github.io/dcom142-cmdquiz/)**
+
+Open it and play. Nothing to install. On a phone, tap the menu options and tap the input line to type. The game runs in a simulated terminal right in the page.
+
+## Option 2: Download
+
+Download the game and run it in a real terminal. It's one Python file.
 
 **Never used a terminal before? No problem.** Follow the steps for your computer and you'll be playing in about 5 minutes (most of that is waiting for installs). Every gray box is one command: click its copy button, paste it into the terminal, and press **Enter**.
 
@@ -99,6 +112,8 @@ git pull
 ```
 
 ### Playing
+
+*These controls work the same in both versions. In the live link you can also tap menu options instead of using the keys.*
 
 The game gives you a task, like *"Add alice to the group developers WITHOUT removing her other groups"*, and you type the Linux command that does it.
 

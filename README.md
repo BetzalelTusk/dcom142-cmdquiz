@@ -8,6 +8,8 @@ Built by a DCOM 142 student with [Claude Code](https://claude.com/claude-code) t
 
 ## Run it
 
+> **Never used the command line?** Follow the step-by-step **[beginner walkthrough](WALKTHROUGH.md)**. It covers installing Python, downloading the game and running it on Windows or Mac.
+
 ```bash
 python cmdquiz.py
 ```
